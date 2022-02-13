@@ -1,0 +1,230 @@
+---
+title: "Assignment 1: aberration detection"
+author: "Dan Weinberger"
+date: "February 6, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(surveillance)
+library(lubridate)
+library(zoo)
+library(ciTools)
+library(MASS)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(shiny)
+source('./R/App_Hist_limit.R')
+source('./R/FarringtonApp.R')
+source('./R/glrpoisApp.R')
+source('./R/surv.ds.convert.R')
+```
+
+##Part 1 :HIV in Chile
+
+### Goal for the analysis
+Your goal is to set up an aberration detection system for hospitalizations associated with HIV in Chile. 
+
+EDAD: age in years
+diag1: primary diagnosis, in ICD10 coding
+date: Date admitted to hospital 
+
+You have been provided with a subset of the larger database that includes ICD10 codes B20 and Z21, which are codes for HIV/AIDS-related causes of hospitalization: https://www.icd10data.com/ICD10CM/Codes/A00-B99
+
+### First read in the data 
+
+MAC USERS: Change the directory as needed to point to where the .csv file is saved. Or just go to Session/Set Working Directory/To Source File Location
+
+```{r readscsv}
+d1 <- read.csv('chile_hiv.csv')
+```
+
+### Tell R that 'date' is a date variable and assign a format
+see https://www.statmethods.net/input/dates.html
+```{r date_format}
+d1$date <- as.Date(d1$date, "%d%b%Y")
+```
+
+Then create a new variable called 'week.date' that has the date of the Sunday of the week in which the admission occurred. The lubridate has some functions that make this easier. You want to round the date down to the nearest Sunday. The floor_data function can accomplish this: https://rawgit.com/rstudio/cheatsheets/master/lubridate.pdf
+
+```{r date_format2}
+#"round" the date down to 
+d1$week.date <- floor_date(d1$date, unit='week')
+```
+
+
+### Then do some basic explorations. What is the distibution of ages? of Dates? (make a histogram for each)
+```{r hist1}
+hist(d1$EDAD, xlab='Age (years)' )
+```
+
+### Frequency of the codes
+
+Using an online ICD10 dictionary, what are the top 3 diagnosis codes used for HUV/AIDS in this database? 
+
+```{r freq.codes, echo=FALSE}
+sort(table(d1$diag1),decreasing=T)
+```
+
+Unlike the in-class exercise that we completed, we are not going to extract subsets of codes--we will use all HIV-related codes for our case definition.
+
+```{r}
+icd10.3digits<-substr(d1$diag1,1,3) #extract 1st 3 digits from IC10 code
+icd10.3digits[1:10] #view first 10
+d1$hiv <- 1
+
+```
+
+### Let's aggregate now by week.date
+
+```{r}
+d5 <- d1[d1$date<as.Date('2009-01-01'),] %>%
+  group_by(week.date) %>%
+  summarize('hiv'=sum(hiv)) %>%
+  ungroup()
+d5 <- as.data.frame(d5)
+```
+
+
+```{r}
+
+p1 <- ggplot(d5, aes(x=week.date, y=hiv)) +
+  geom_line() +
+  ylab('Cases of HIV') +
+  theme_classic()
+p1
+
+```
+
+
+### HIV: Aberration detection algorithms
+
+First try to use historical limits for the weeks in 2007-2008
+```{r}
+app.hist.limit(ds=d5, datevar='week.date', casevar='hiv')
+```
+
+
+
+### HIV: Farrington method
+```{r hist.limits2}
+FarringtonApp(ds=d5, datevar='week.date', casevar='hiv')
+```
+### HIV CUSUM/GLR method
+```{r}
+glrpois_App(ds=d5, datevar='week.date', casevar='hiv', n.weeks.train=53)
+
+```
+
+
+##Part 2: Microcephaly 
+Your goal is to set up an aberration detection system for microcephaly in infants in Chile. 
+
+EDAD: age in years
+diag1: primary diagnosis, in ICD10 coding
+date: Date admitted to hospital 
+
+You have been provided with a subset of the larger database that includes ICD10 codes in the Q chapter, which include congenital malformations: https://www.icd10data.com/ICD10CM/Codes/Q00-Q99
+
+### First read in the data 
+Change the directory as needed to point to where the .csv file is saved
+```{r read.birth.defects}
+e1<-readRDS('ch.birth.defects.rds')
+
+```
+
+### Tell R that 'date' is a date variable and assign a format
+see https://www.statmethods.net/input/dates.html
+```{r date_format}
+e1$date<- as.Date(e1$date, "%d%b%Y")
+```
+
+Then create a new variable called 'week.date' that has the date of the Sunday of the week in which the admission occurred. The lubridate has some functions that make this easier. You want to round the date down to the nearest Sunday. The floor_data function can accomplish this: https://rawgit.com/rstudio/cheatsheets/master/lubridate.pdf
+
+```{r date_format2}
+#"round" the date down to 
+e1$week.date<-floor_date(e1$date, unit='week')
+```
+
+
+### Then do some basic explorations. What is the distibution of ages? 
+```{r hist1}
+par(mfrow=c(1,1))
+hist(e1$EDAD, xlab='Age (years)' )
+```
+
+### Frequency of the codes
+
+```{r freq.codes, echo=FALSE}
+sort(table(e1$diag1), decreasing=T)[1:50]
+```
+
+
+```{r}
+icd10.3digits<-substr(e1$diag1,1,3) #extract 1st 3 digits from IC10 code
+#icd10.3digits[1:10] #view first 10
+
+#Initialize variables
+e1$q02 <- 0
+e1$q02[icd10.3digits %in% c('Q02') ]<-1
+sum(e1$q02) #check your work
+hist(e1$EDAD[e1$q02==1]) #see age distribution for microcephaly
+
+e1$q02[e1$EDAD>0]<-0 #restricts case definition to kids <1 year
+
+
+```
+
+### Let's aggregate now by week.date
+
+```{r}
+e2 <- e1 %>%
+  group_by(week.date) %>%
+  summarize(q02 = sum(q02)) %>%
+  ungroup()
+```
+
+It is also important to make sure that the time series is 'filled'--if there are weeks with 0 counts, it needs to be represented in the time series.
+
+```{r}
+ e5 <- e2 %>%
+  tidyr::complete(week.date=seq.Date(min(week.date, na.rm=T), max(week.date, na.rm=T), 'week'), fill=list(q02=0)) #fills 0s
+
+```
+
+
+
+```{r}
+p2 <- ggplot(e5, aes(x=week.date, y=q02)) +
+  geom_line() +
+  ylab('Cases of microcephaly') +
+  theme_classic()
+p2
+```
+
+
+### Microcephaly: Historical limits
+
+```{r}
+
+```
+
+### Microcephaly: Farrington method
+
+```{r}
+
+```
+
+### Microcephaly:GLR/CUSUM method
+
+```{r}
+
+```
+
+
+
+
+
+
