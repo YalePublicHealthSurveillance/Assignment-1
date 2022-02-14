@@ -85,6 +85,8 @@ d5 <- d1[d1$date<as.Date('2009-01-01'),] %>%
   summarize('hiv'=sum(hiv)) %>%
   ungroup()
 d5 <- as.data.frame(d5)
+
+d5 <- d5[!is.na(d5$week.date),]
 ```
 
 
@@ -114,7 +116,7 @@ FarringtonApp(ds=d5, datevar='week.date', casevar='hiv')
 ```
 ### HIV CUSUM/GLR method
 ```{r}
-glrpois_App(ds=d5, datevar='week.date', casevar='hiv', n.weeks.train=53)
+glrpois_App(ds=d5, datevar='week.date', casevar='hiv', n.weeks.train=100)
 
 ```
 
@@ -192,6 +194,10 @@ It is also important to make sure that the time series is 'filled'--if there are
  e5 <- e2 %>%
   tidyr::complete(week.date=seq.Date(min(week.date, na.rm=T), max(week.date, na.rm=T), 'week'), fill=list(q02=0)) #fills 0s
 
+
+e5 <- e5[!is.na(e5$week.date),]
+
+e5 <- as.data.frame(e5)
 ```
 
 
@@ -208,18 +214,17 @@ p2
 ### Microcephaly: Historical limits
 
 ```{r}
-
+app.hist.limit(ds=e5, datevar='week.date', casevar='q02')
 ```
 
 ### Microcephaly: Farrington method
 
-```{r}
-
-```
+Can't use this one with very low counts...
 
 ### Microcephaly:GLR/CUSUM method
 
 ```{r}
+glrpois_App(ds=e5, datevar='week.date', casevar='q02', n.weeks.train=53)
 
 ```
 
