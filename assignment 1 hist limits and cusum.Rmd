@@ -38,7 +38,7 @@ You have been provided with a subset of the larger database that includes ICD10 
 MAC USERS: Change the directory as needed to point to where the .csv file is saved. Or just go to Session/Set Working Directory/To Source File Location
 
 ```{r readscsv}
-d1 <- read.csv('chile_hiv.csv')
+d1 <- read.csv('./Data/chile_hiv.csv')
 ```
 
 ### Tell R that 'date' is a date variable and assign a format
@@ -131,9 +131,9 @@ date: Date admitted to hospital
 You have been provided with a subset of the larger database that includes ICD10 codes in the Q chapter, which include congenital malformations: https://www.icd10data.com/ICD10CM/Codes/Q00-Q99
 
 ### First read in the data 
-Change the directory as needed to point to where the .csv file is saved
+Change the directory as needed to point to where the .rds file is saved
 ```{r read.birth.defects}
-e1<-readRDS('ch.birth.defects.rds')
+e1<-readRDS('./Data/ch.birth.defects.rds')
 
 ```
 
