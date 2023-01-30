@@ -81,7 +81,7 @@ xx
 
 ### Let's aggregate now by week.date
 
-name your variable with the number of counts 'hiv'
+call the data frame 'd5', and name your variable with the number of counts 'hiv'
 ```{r}
 XX
 ```
