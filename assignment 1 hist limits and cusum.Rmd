@@ -1,7 +1,7 @@
 ---
 title: "Assignment 1: aberration detection"
 author: "Dan Weinberger"
-date: "February 14, 2022"
+date: "Jan 30, 2023"
 output: html_document
 ---
 
@@ -31,11 +31,9 @@ EDAD: age in years
 diag1: primary diagnosis, in ICD10 coding
 date: Date admitted to hospital 
 
-You have been provided with a subset of the larger database that includes ICD10 codes B20 and Z21, which are codes for HIV/AIDS-related causes of hospitalization: https://www.icd10data.com/ICD10CM/Codes/A00-B99
+You have been provided with a subset of the larger database that includes ICD10 codes B20 and Z21, which are codes for HIV/AIDS-related causes of hospitalization: https://icd.who.int/browse10/2016/en#/A00-A09
 
 ### First read in the data 
-
-MAC USERS: Change the directory as needed to point to where the .csv file is saved. Or just go to Session/Set Working Directory/To Source File Location
 
 ```{r readscsv}
 d1 <- read.csv('./Data/chile_hiv.csv')
@@ -73,32 +71,27 @@ Unlike the in-class exercise that we completed, we are not going to extract subs
 ```{r}
 icd10.3digits<-substr(d1$diag1,1,3) #extract 1st 3 digits from IC10 code
 icd10.3digits[1:10] #view first 10
-d1$hiv <- 1
-
 ```
+### Historgram of ages
+
+```{r}
+xx
+```
+
 
 ### Let's aggregate now by week.date
 
+name your variable with the number of counts 'hiv'
 ```{r}
-d5 <- d1[d1$date<as.Date('2009-01-01'),] %>%
-  group_by(week.date) %>%
-  summarize('hiv'=sum(hiv)) %>%
-  ungroup()
-d5 <- as.data.frame(d5)
-
-d5 <- d5[!is.na(d5$week.date),]
+XX
 ```
 
+Plot your time series
 
 ```{r}
-
-p1 <- ggplot(d5, aes(x=week.date, y=hiv)) +
-  geom_line() +
-  ylab('Cases of HIV') +
-  theme_classic()
-p1
-
+xx
 ```
+
 
 
 ### HIV: Aberration detection algorithms
