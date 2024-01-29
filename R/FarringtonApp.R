@@ -1,4 +1,5 @@
 FarringtonApp <-function(ds=ds1, datevar='date', casevar='cases'){
+  ds=as.data.frame(ds)
   surv.ds1 <- surv.ds.convert(ds, datevar=datevar, casevar=casevar)
   
 shinyApp(
